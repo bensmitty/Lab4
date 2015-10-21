@@ -47,8 +47,19 @@ router.route('/:id')
         //console.log(parseInt(req.body['id']));
         if(Number(parseInt(req.body['id'])) && req.body['name'] && Number(req.body['price']))
         {
-            console.log("Passed");
-            postItem(req.body['id'], req.body['name'], req.body['price'])
+            //console.log("Passed");
+            postItem(req.body['id'], req.body['name'], req.body['price'], function(err,data)
+            {
+                console.log(data);
+                res.send(
+                    {
+                        Status: data + ' Item entered',
+                        'Item id': Number(req.body['id']),
+                        'Item Name': req.body['name'],
+                        'Item Price': req.body['price'],
+                    }
+                );
+            });
         }
         else
         {
@@ -107,6 +118,7 @@ function getItem(product_id, callback) {
 
 function postItem(product_id, product_name, product_price, callback)
 {
+    var post  = {id: product_id, name: '\'' + product_name + '\'', price:product_price};
     pool.getConnection(function(err,connection)
     {
         if(err)
@@ -118,23 +130,15 @@ function postItem(product_id, product_name, product_price, callback)
 
         console.log("DB connection thread: " + connection.threadId);
 
-        connection.query('INSERT INTO PRODUCT VALUES(' + product_id + ',"' + product_name + '",' + product_price + ')', function(err, results){
+        connection.query('INSERT INTO PRODUCT SET ?', post, function(err, results){
             connection.release();
             //console.log("here");
+            //console.log("Error" + err);
             if (!err)
             {
-                //console.log("here");
-                if(results[0] != null)
-                {
-                    //console.log("here");
-                    callback(null, results[0]);
-                }
-                else
-                {
-                    console.log("here");
-                    //return;
-                    callback("Good");
-                }
+                //console.log(results);
+                callback(null, results.affectedRows);
+
             }
             else
             {
