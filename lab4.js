@@ -16,6 +16,35 @@ var pool = mysql.createPool({
 
 // Setup the item routes
 router.route('/:id')
+	.delete (function (req, res, next)
+	{
+		var id = req.params['id'];
+		console.log("Remove item: " + id);
+		if (id && Number(id))
+		{
+			deleteItem(id, function(err, data)
+			{
+				console.log(data  + " item(s) removed from database");
+				if (data)
+				{
+					res.send(
+                    {
+                        Status: data + ' item(s) removed',
+                        'Item id': Number(id),                        
+                    });
+				}
+				else
+                {
+                    res.send(404, { Status: 'Item not found' });
+                }
+			});
+		}
+		else
+		{
+            res.send(404, { status: 'Invalid entry' });
+        }
+	})
+	
     .get(function (req, res, next)
     {
         var id = req.params['id'];
@@ -42,19 +71,21 @@ router.route('/:id')
             res.send(404, { status: 'Invalid entry' });
         }
     })
+	
     .post(function (req, res, next)
     {
+		var id = req.params['id'];
         //console.log(parseInt(req.body['id']));
-        if(Number(parseInt(req.body['id'])) && req.body['name'] && Number(req.body['price']))
+        if(Number(parseInt(id)) && req.body['name'] && Number(req.body['price']))
         {
             //console.log("Passed");
-            postItem(req.body['id'], req.body['name'], req.body['price'], function(err,data)
+            postItem(id, req.body['name'], req.body['price'], function(err,data)
             {
-                console.log(data + " items entered into database");
+                console.log(data + " item(s) entered into database");
                 res.send(
                     {
                         Status: data + ' Item entered',
-                        'Item id': Number(req.body['id']),
+                        'Item id': Number(id),
                         'Item Name': req.body['name'],
                         'Item Price': req.body['price'],
                     }
@@ -69,15 +100,16 @@ router.route('/:id')
     })
     .put(function (req, res, next)
     {
-        if(Number(parseInt(req.body['id'])) && req.body['name'] && Number(req.body['price']))
+		var id = req.params['id'];
+        if(Number(parseInt(id)) && req.body['name'] && Number(req.body['price']))
         {
-            putItem(req.body['id'], req.body['name'], req.body['price'], function(err,data)
+            putItem(id, req.body['name'], req.body['price'], function(err,data)
             {
                 console.log(data);
                 res.send(
                     {
-                        Status: data + ' items replaced',
-                        'Item id': Number(req.body['id']),
+                        Status: data + ' item(s) replaced',
+                        'Item id': Number(id),
                         'Item Name': req.body['name'],
                         'Item Price': req.body['price'],
                     }
@@ -88,6 +120,43 @@ router.route('/:id')
     .all(function (req, res, next) {
         res.send(501, { Status: 'Not implemented' });
     });
+	
+	
+function deleteItem(product_id, callback)
+{
+	var get = {id: product_id};
+	pool.getConnection(function(err,connection)
+    {
+        if(err)
+        {
+            connection.release();
+            callback(err,null);
+            return;
+        }
+
+        console.log("DB connection thread: " + connection.threadId);
+
+        connection.query('DELETE FROM PRODUCT WHERE ?', get, function(err, results){
+            connection.release();
+            if (!err)
+            {
+				callback(null, results.affectedRows)                
+            }
+            else
+            {
+                callback(err,null);
+            }
+
+        });
+
+        connection.on('error', function(err)
+        {
+            console.log(err.code);
+            callback("Error", null);
+            return;
+        });
+    });
+}
 
 
 function getItem(product_id, callback) {

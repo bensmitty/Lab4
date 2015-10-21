@@ -1,11 +1,12 @@
 GET
 curl 127.0.0.1:8080/price/1234567
+curl 127.0.0.1:8080/price/1234
 
 POST
-curl 127.0.0.1:8080/price/1234567 -H "content-type:application/json" -d "{\"id\":\"1234\",\"name\":\"test import\",\"price\":\"3.44\"}"
+curl 127.0.0.1:8080/price/1234 -H "content-type:application/json" -d "{\"id\":\"1234\",\"name\":\"test import\",\"price\":\"3.44\"}"
 
 PUT
-curl 127.0.0.1:8080/price/1234567 -X PUT -H "content-type:application/json" -d "{\"id\":\"1234\",\"name\":\"test import\",\"price\":\"3.45\"}"
+curl 127.0.0.1:8080/price/1234 -X PUT -H "content-type:application/json" -d "{\"id\":\"1234\",\"name\":\"test import\",\"price\":\"3.45\"}"
 
 DELETE
-curl 127.0.0.1:8080/price/1234567 -X DELETE
+curl 127.0.0.1:8080/price/1234 -X DELETE
