@@ -50,7 +50,7 @@ router.route('/:id')
             //console.log("Passed");
             postItem(req.body['id'], req.body['name'], req.body['price'], function(err,data)
             {
-                console.log(data);
+                console.log(data + " items entered into database");
                 res.send(
                     {
                         Status: data + ' Item entered',
@@ -66,6 +66,24 @@ router.route('/:id')
             res.send("Invalid data");
         }
         //res.send("Implementing post " + req.body['description']);
+    })
+    .put(function (req, res, next)
+    {
+        if(Number(parseInt(req.body['id'])) && req.body['name'] && Number(req.body['price']))
+        {
+            putItem(req.body['id'], req.body['name'], req.body['price'], function(err,data)
+            {
+                console.log(data);
+                res.send(
+                    {
+                        Status: data + ' items replaced',
+                        'Item id': Number(req.body['id']),
+                        'Item Name': req.body['name'],
+                        'Item Price': req.body['price'],
+                    }
+                );
+            });
+        }
     })
     .all(function (req, res, next) {
         res.send(501, { Status: 'Not implemented' });
@@ -118,7 +136,7 @@ function getItem(product_id, callback) {
 
 function postItem(product_id, product_name, product_price, callback)
 {
-    var post  = {id: product_id, name: '\'' + product_name + '\'', price:product_price};
+    var post  = {id: product_id, name: product_name , price:product_price};
     pool.getConnection(function(err,connection)
     {
         if(err)
@@ -155,6 +173,45 @@ function postItem(product_id, product_name, product_price, callback)
         });
     });
 
+}
+
+
+function putItem(product_id, product_name, product_price, callback)
+{
+    var id = {id: product_id};
+    var post  = {name: product_name , price:product_price};
+    pool.getConnection(function(err,connection)
+    {
+        if(err)
+        {
+            connection.release();
+            callback(err,null);
+            return;
+        }
+
+        console.log("DB connection thread: " + connection.threadId);
+
+        connection.query('UPDATE PRODUCT SET name=?,price=? WHERE id=?', [product_name,product_price,product_id], function(err, results){
+            connection.release();
+            if (!err)
+            {
+                callback(null, results.changedRows);
+
+            }
+            else
+            {
+                callback(err,null);
+            }
+
+        });
+
+        connection.on('error', function(err)
+        {
+            console.log(err.code);
+            callback("Error", null);
+            return;
+        });
+    });
 }
 
 
